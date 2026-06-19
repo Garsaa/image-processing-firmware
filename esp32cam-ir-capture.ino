@@ -51,9 +51,17 @@ volatile bool captureDue = false;
 bool captureEnabled = false;
 String lastTriggerCommand = "ir-ok";
 
+extern "C" void IRAM_ATTR markCaptureDueFromTimerAsm();
+
+#if !defined(__XTENSA__) && !defined(__xtensa__)
+void IRAM_ATTR markCaptureDueFromTimerAsm() {
+  captureDue = true;
+}
+#endif
+
 void IRAM_ATTR onCaptureTimer() {
   portENTER_CRITICAL_ISR(&captureTimerMux);
-  captureDue = true;
+  markCaptureDueFromTimerAsm();
   portEXIT_CRITICAL_ISR(&captureTimerMux);
 }
 

@@ -51,17 +51,10 @@ volatile bool captureDue = false;
 bool captureEnabled = false;
 String lastTriggerCommand = "ir-ok";
 
-extern "C" void IRAM_ATTR markCaptureDueFromTimerAsm();
-
-#if !defined(__XTENSA__) && !defined(__xtensa__)
-void IRAM_ATTR markCaptureDueFromTimerAsm() {
-  captureDue = true;
-}
-#endif
 
 void IRAM_ATTR onCaptureTimer() {
   portENTER_CRITICAL_ISR(&captureTimerMux);
-  markCaptureDueFromTimerAsm();
+  captureDue = true;
   portEXIT_CRITICAL_ISR(&captureTimerMux);
 }
 
@@ -74,16 +67,9 @@ bool popCaptureDue() {
 }
 
 void configureCaptureTimer() {
-#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
-  captureTimer = timerBegin(1000000);
-  timerAttachInterrupt(captureTimer, &onCaptureTimer);
-  timerAlarm(captureTimer, static_cast<uint64_t>(CAPTURE_INTERVAL_MS) * 1000ULL, true, 0);
-  timerStop(captureTimer);
-#else
   captureTimer = timerBegin(0, 80, true);
   timerAttachInterrupt(captureTimer, &onCaptureTimer, true);
   timerAlarmWrite(captureTimer, static_cast<uint64_t>(CAPTURE_INTERVAL_MS) * 1000ULL, true);
-#endif
 }
 
 void startCaptureTimer() {
@@ -95,13 +81,8 @@ void startCaptureTimer() {
   captureDue = true;
   portEXIT_CRITICAL(&captureTimerMux);
 
-#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
-  timerWrite(captureTimer, 0);
-  timerStart(captureTimer);
-#else
   timerWrite(captureTimer, 0);
   timerAlarmEnable(captureTimer);
-#endif
 }
 
 void stopCaptureTimer() {
@@ -109,11 +90,7 @@ void stopCaptureTimer() {
     return;
   }
 
-#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
-  timerStop(captureTimer);
-#else
   timerAlarmDisable(captureTimer);
-#endif
 
   portENTER_CRITICAL(&captureTimerMux);
   captureDue = false;
@@ -136,13 +113,8 @@ bool configureCamera() {
   config.pin_pclk = PCLK_GPIO_NUM;
   config.pin_vsync = VSYNC_GPIO_NUM;
   config.pin_href = HREF_GPIO_NUM;
-#if defined(ESP_ARDUINO_VERSION_MAJOR) && ESP_ARDUINO_VERSION_MAJOR >= 3
-  config.pin_sccb_sda = SIOD_GPIO_NUM;
-  config.pin_sccb_scl = SIOC_GPIO_NUM;
-#else
   config.pin_sscb_sda = SIOD_GPIO_NUM;
   config.pin_sscb_scl = SIOC_GPIO_NUM;
-#endif
   config.pin_pwdn = PWDN_GPIO_NUM;
   config.pin_reset = RESET_GPIO_NUM;
   config.xclk_freq_hz = 20000000;

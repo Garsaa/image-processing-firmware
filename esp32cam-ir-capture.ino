@@ -5,7 +5,6 @@
 #include <WiFiClient.h>
 #include <WiFiClientSecure.h>
 #include <esp_camera.h>
-#include <esp_arduino_version.h>
 
 const char *WIFI_SSID = "Garsa_Phone";
 const char *WIFI_PASSWORD = "testedaesp";

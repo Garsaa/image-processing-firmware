@@ -119,19 +119,10 @@ bool configureCamera() {
   config.xclk_freq_hz = 20000000;
   config.pixel_format = PIXFORMAT_JPEG;
   config.grab_mode = CAMERA_GRAB_LATEST;
-
-  if (psramFound()) {
-    config.frame_size = FRAMESIZE_SVGA;
-    config.jpeg_quality = 12;
-    config.fb_count = 2;
-    config.fb_location = CAMERA_FB_IN_PSRAM;
-  } else {
-    config.frame_size = FRAMESIZE_CIF;
-    config.jpeg_quality = 14;
-    config.fb_count = 1;
-    config.fb_location = CAMERA_FB_IN_DRAM;
-  }
-
+  config.frame_size = FRAMESIZE_SVGA;
+  config.jpeg_quality = 12;
+  config.fb_count = 2;
+  config.fb_location = CAMERA_FB_IN_PSRAM;
   const esp_err_t error = esp_camera_init(&config);
   if (error != ESP_OK) {
     Serial.printf("Camera init failed: 0x%x\n", error);
